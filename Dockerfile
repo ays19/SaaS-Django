@@ -13,8 +13,8 @@ ENV PATH=/opt/venv/bin:$PATH
 RUN pip install --upgrade pip
 
 # Set Python-related environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 # Install os dependencies for our mini vm
 RUN apt-get update && apt-get install -y \
@@ -38,7 +38,7 @@ WORKDIR /code
 COPY requirements.txt /tmp/requirements.txt
 
 # copy the project code into the container's working directory
-COPY ./src /code
+COPY . /code
 
 # Install the Python project requirements
 RUN pip install -r /tmp/requirements.txt
@@ -50,7 +50,7 @@ RUN pip install gunicorn
 # RUN python manage.py collectstatic --noinput
 
 # set the Django default project name
-ARG PROJ_NAME="cfehome"
+ARG PROJ_NAME="Saas_Django"
 
 # create a bash script to run the Django project
 # this script will execute at runtime when
@@ -71,4 +71,4 @@ RUN apt-get remove --purge -y \
 
 # Run the Django project via the runtime script
 # when the container starts
-CMD ./paracord_runner.sh
+CMD ["./paracord_runner.sh"]

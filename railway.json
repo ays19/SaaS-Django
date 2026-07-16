@@ -4,7 +4,8 @@
         "dockerfilePath": "./Dockerfile",
         "watchPatterns": [
             "requirements.txt",
-            "src/**",
+            "Saas_Django/**",
+            "manage.py",
             "railway.json",
             "Dockerfile"
         ]
