@@ -54,7 +54,7 @@ ROOT_URLCONF = 'Saas_Django.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "templates", BASE_DIR / "SAAS_DJANGO"] ,
+        'DIRS': [BASE_DIR / "templates", BASE_DIR / "Saas_Django"] ,
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
