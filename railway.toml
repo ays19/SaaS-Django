@@ -5,7 +5,7 @@
         "watchPatterns": [
             "requirements.txt",
             "src/**",
-            "railway.json",
+            "railway.toml",
             "Dockerfile"
         ]
     }
