@@ -25,7 +25,7 @@ EMAIL_HOST_PASSWORD=config("EMAIL_HOST_PASSWORD", default="Gmail App Password")
 EMAIL_USE_TLS=config("EMAIL_USE_TLS", cast=bool, default=True) #use EMAI_PORT 587 for TLS
 EMAIL_USE_SSL=config("EMAIL_USE_SSL", cast=bool, default=False) #use MAIL_PORT 465 for SSL
 
-ADMINS=['Sharar', 'sharar@example.com']
+ADMINS=['Sharar', 'sahsanyasir@gmail.com']
 MANAGERS=ADMINS
 
 # Quick-start development settings - unsuitable for production
