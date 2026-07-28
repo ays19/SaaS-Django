@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
+    'allauth.socialaccount.providers.github',
     'widget_tweaks',
 
 ]
@@ -148,10 +149,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Django Allauth Config
 LOGIN_REDIRECT_URL = "/"
-ACCOUNT_AUTHENTICATION_METHOD ="username_email"
-ACCOUNT_EMAIL_VERIFICATION="mandatory"
-ACCOUNT_EMAIL_SUBJECT_PREFIX="[ays19]"
-ACCOUNT_EMAIL_REQUIRED=True
+ACCOUNT_LOGIN_METHODS = {"username", "email"}
+ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_EMAIL_SUBJECT_PREFIX = "[ays19]"
 
 AUTHENTICATION_BACKENDS = [
     # Needed to login by username in Django admin, regardless of `allauth`
@@ -162,6 +163,9 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 SOCIALACCOUNT_PROVIDERS = {
+    "github": {
+        "VERIFIED_EMAIL": True,
+    }
 }
 
 # Internationalization
@@ -206,4 +210,3 @@ STORAGES = {
 # https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
