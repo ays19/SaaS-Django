@@ -28,7 +28,7 @@ A modular Django web application designed to demonstrate user authentication, pr
 - **Backend**: Python 3.12, Django 5.x / 6.x
 - **Authentication**: Django Auth & `django-allauth`
 - **Database**: SQLite (default)
-- **Dependency Manager**: Pipenv (`Pipfile`)
+- **Environment & Dependency Manager**: Python `venv` & `requirements.txt`
 
 ---
 
@@ -36,7 +36,7 @@ A modular Django web application designed to demonstrate user authentication, pr
 
 ```text
 ├── manage.py                  # Django CLI entrypoint
-├── Pipfile                    # Pipenv dependencies
+├── requirements.txt           # Python dependencies
 ├── Saas_Django/               # Core project configuration
 │   ├── settings.py            # Global project settings (database, apps, hostnames)
 │   ├── urls.py                # Route controllers / URL routing mapping
@@ -58,15 +58,23 @@ A modular Django web application designed to demonstrate user authentication, pr
 
 ## Getting Started
 
-### 1. Clone the Repository & Install Dependencies
-Ensure you have Python 3.12 and [Pipenv](https://pipenv.pypa.io/en/latest/) installed:
+### 1. Clone the Repository & Set Up Virtual Environment
+Ensure you have Python 3.12 installed:
 
 ```bash
-# Install dependencies from Pipfile
-pipenv install
+# Create a virtual environment
+python3 -m venv venv
 
 # Activate the virtual environment
-pipenv shell
+# Linux/macOS:
+source venv/bin/activate
+# Windows (Command Prompt):
+# venv\Scripts\activate.bat
+# Windows (PowerShell):
+# venv\Scripts\Activate.ps1
+
+# Install dependencies from requirements.txt
+pip install -r requirements.txt
 ```
 
 ### 2. Run Database Migrations
