@@ -5,6 +5,13 @@ from django.http import HttpResponse
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
+@login_required
+def profile_list_view(request):
+    context = {
+        "object_list": User.objects.filter(is_active=True)
+    }
+    return render(request, "profiles/list.html", context)
+
 # Create your views here.
 @login_required
 def profile_view(request, username=None, *args, **kwargs):
