@@ -17,10 +17,10 @@ def profile_list_view(request):
 def profile_detail_view(request, username=None, *args, **kwargs):
     user = request.user
     print(
-        user.has_perm("subcriptions.basic"),
-        user.has_perm("subcriptions.basic_ai"),
-        user.has_perm("subcriptions.pro"),
-        user.has_perm("subcriptions.advanced"),
+        user.has_perm("subscriptions.basic"),
+        user.has_perm("subscriptions.basic_ai"),
+        user.has_perm("subscriptions.pro"),
+        user.has_perm("subscriptions.advanced"),
     )
     # user_groups = user.groups.all()
     # print("user_groups:", user_groups)

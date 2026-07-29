@@ -60,7 +60,7 @@ INSTALLED_APPS = [
     # my-apps
     'commando',
     'profiles',
-    'subcriptions',
+    'subscriptions',
     'visits',
     #thirs party apps
     'slippers',
