@@ -12,7 +12,8 @@ A modular Django web application designed to demonstrate user authentication, us
   - User detail profile pages (`/profiles/<username>/`).
 - **Subscription & Permission Tier Management**:
   - Custom permissions framework (`subscriptions.basic`, `subscriptions.basic_ai`, `subscriptions.pro`, `subscriptions.advanced`).
-  - `Subscription` model mapped to Django Groups and Permissions for feature access control.
+  - `Subscription` and `UserSubscription` models mapped to Django Groups and Permissions for feature access control.
+  - Automatic user group synchronization via `post_save` Django signals when a user's subscription changes.
 - **Access Control & Protected Routes**:
   - User-only pages (`@login_required`).
   - Staff-only pages (`@staff_member_required`).
@@ -26,7 +27,9 @@ A modular Django web application designed to demonstrate user authentication, us
   - Core base layout (`templates/base.html`) with customizable blocks for content and titles.
   - Integrated Flowbite CSS/JS components.
 - **Re-usable Snippets**: Includes reusable HTML snippets (e.g., navigation bar, welcome user messages).
-- **Custom Management Commands**: Built-in `commando` app for management tasks, including automated vendor static file downloads (`vendor_pull`).
+- **Custom Management Commands**:
+  - `vendor_pull`: Automated downloading of external vendor static files (Flowbite CSS/JS).
+  - `sync_subs`: Synchronizes subscription permissions across active user groups.
 - **Containerization & Deployment Ready**:
   - Includes multi-stage `Dockerfile` with Gunicorn production server and runtime initialization script (`paracord_runner.sh`).
   - Cloud deployment configuration via `railway.json` for seamless deployment on Railway.
@@ -60,7 +63,10 @@ A modular Django web application designed to demonstrate user authentication, us
 ├── commando/                  # Custom Django management commands (e.g., vendor_pull)
 ├── helpers/                   # General utility functions and helper modules
 ├── profiles/                  # User profiles app (user list & profile views)
-├── subscriptions/             # Subscription tiers & permission management app
+├── subscriptions/             # Subscription management app
+│   ├── models.py              # Subscription & UserSubscription models + signals
+│   ├── admin.py               # Admin registrations for Subscriptions & UserSubscriptions
+│   └── management/commands/   # Custom commands (e.g., sync_subs)
 ├── templates/                 # Global templates directory
 │   ├── base.html              # Base layout template
 │   ├── home.html              # Homepage view template inheriting from base
@@ -95,10 +101,11 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Download Vendor Static Files
-Fetch external vendor libraries (Flowbite CSS/JS):
+### 2. Download Vendor Static Files & Sync Subscriptions
+Fetch external vendor libraries (Flowbite CSS/JS) and synchronize subscription permissions:
 ```bash
 python manage.py vendor_pull
+python manage.py sync_subs
 ```
 
 ### 3. Run Database Migrations
@@ -142,5 +149,6 @@ docker run -p 8000:8000 -e DJANGO_SECRET_KEY='your-secret-key' saas-django
 - `http://127.0.0.1:8000/protected/user_only/` – Login-required user view.
 - `http://127.0.0.1:8000/protected/staff_only/` – Staff-only view.
 - `http://127.0.0.1:8000/admin/` – Django Administration panel.
+
 
 
