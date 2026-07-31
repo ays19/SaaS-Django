@@ -6,9 +6,15 @@ STRIPE_SECRET_KEY = config("STRIPE_SECRET_KEY", default="", cast=str)
 
 stripe.api_key = STRIPE_SECRET_KEY
 
-# def create_customer():
-#     customer = stripe.Customer.create(
-#             name="Jenny Rosen",
-#             email="jennyrosen@example.com",
-#         )
-#     return customer
+def create_customer(
+        name="", 
+        email="", 
+        raw=False):
+    response = stripe.Customer.create(
+        name=name,
+        email=email,
+        )
+    if raw:
+        return response
+    stripe_id = response.id
+    return stripe_id
