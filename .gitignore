@@ -4,6 +4,7 @@ staticfiles/vendors
 # ignore local static files root
 # or "local-cdn"
 local-cdn/
+node_modules/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

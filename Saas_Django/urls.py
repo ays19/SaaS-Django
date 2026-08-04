@@ -31,6 +31,7 @@ urlpatterns = [
     # path('login/', auth_views.login_view, name='login'),
     # path('register/', auth_views.register_view, name='register'),
     path('pricing/', subscriptions_views.subscription_price_view, name='pricing'),
+    path('pricing/<str:interval>/', subscriptions_views.subscription_price_view, name='pricing_interval'),
     path('about/', about_view, name='about'),
     path('accounts/', include('allauth.urls')),
     path('protected/user_only/', user_only_view),
