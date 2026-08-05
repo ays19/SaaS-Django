@@ -11,12 +11,21 @@
             {% block head_title %}
             {% endblock head_title %}
         </title>
-        {# flowbite (Tailwind v3, unlayered) must load BEFORE allauth_ui/output.css (Tailwind v4, @layer-based) #}
-        {# Loading order matters: unlayered CSS wins over @layer rules, so flowbite must come first #}
-        {% include 'base/css.html' %}
         {% block extra_head %}
             <link rel="stylesheet" href="{% static 'allauth_ui/output.css' %}">
         {% endblock extra_head %}
+        {% include 'base/css.html' %}
+        <style>
+            button.btn-primary {
+                background-color: var(--color-primary);
+                color: var(--color-primary-content);
+                border-color: var(--color-primary);
+            }
+            button.btn-primary:hover {
+                background-color: var(--color-primary);
+                filter: brightness(0.85);
+            }
+        </style>
     </head>
     <body class="min-h-screen bg-base-300">
         {% include 'nav/navbar.html' %}
