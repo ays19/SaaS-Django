@@ -6,6 +6,7 @@ DJANGO_DEBUG=config("DJANGO_DEBUG", default=False, cast=bool)
 STRIPE_SECRET_KEY = config("STRIPE_SECRET_KEY", default="", cast=str)
 
 stripe.api_key = STRIPE_SECRET_KEY
+stripe.api_version = "2024-06-20"
 
 def create_customer(
         name="", 
