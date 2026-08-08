@@ -140,17 +140,17 @@ class SubscriptionPrice(models.Model):
             ).exclude(id=self.id)
             qs.update(featured=False)
 
+class SubscriptionStatus(models.TextChoices):
+    ACTIVE = 'active', 'Active'
+    TRIALING = 'trailing', "Trialing"
+    INCOMPLETE = 'incomplete', 'Incomplete'
+    INCOMPLETE_EXPIRED = 'incomplete_expired', "Incomplete Expired"
+    PAST_DUE = 'past_due', "Past Due"
+    CANCELLED = 'cancelled', "Cancelled"
+    UNPAID = 'unpaid', 'Unpaid'
+    PAUSED = 'paused', 'Paused'
 
 class UserSubscription(models.Model):
-    class SubscriptionStatus(models.TextChoices):
-        ACTIVE = 'active', 'Active'
-        TRIALING = 'trailing', "Trialing"
-        INCOMPLETE = 'incomplete', 'Incomplete'
-        INCOMPLETE_EXPIRED = 'incomplete_expired', "Incomplete Expired"
-        PAST_DUE = 'past_due', "Past Due"
-        CANCELLED = 'cancelled', "Cancelled"
-        UNPAID = 'unpaid', 'Unpaid'
-        PAUSED = 'paused', 'Paused'
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     subscription = models.ForeignKey(Subscription, on_delete=models.SET_NULL, null=True, blank=True)
     stripe_id = models.CharField(max_length=120, null=True, blank=True)
@@ -164,6 +164,11 @@ class UserSubscription(models.Model):
 
     def get_absolute_url(self):
         return reverse("user_subscription")
+
+    @property
+    def is_active_status(self):
+        return self.status in [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING
+                               ]
 
     @property
     def plan_name(self):
