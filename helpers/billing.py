@@ -109,7 +109,7 @@ def get_checkout_customer_plan(session_id):
     # current_period_start
     # current_period_end
     sub_plan = sub_r.plan
-
+    status = sub_r.status
     current_period_start = date_utils.timestamp_as_datetime(sub_r.current_period_start)
     current_period_end = date_utils.timestamp_as_datetime(sub_r.current_period_end)
     
@@ -119,5 +119,6 @@ def get_checkout_customer_plan(session_id):
         "sub_stripe_id": sub_stripe_id,
         "current_period_start": current_period_start,
         "current_period_end": current_period_end,
+        "status": status
     }
     return data
