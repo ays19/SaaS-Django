@@ -8,7 +8,6 @@ from subscriptions.models import SubscriptionPrice, UserSubscription
 @login_required
 def user_subscription_view(request,):
     user_sub_obj, created = UserSubscription.objects.get_or_create(user=request.user)
-    sub_data = user_sub_obj.serialize()
     if request.method == "POST":
         print("refresh subscription")
         if user_sub_obj.stripe_id:
@@ -17,7 +16,21 @@ def user_subscription_view(request,):
                 setattr(user_sub_obj, k, v)
             user_sub_obj.save()
             return redirect(user_sub_obj.get_absolute_url())
-    return render(request, 'subscriptions/user_detail_view.html', {'subscription': sub_data})
+    return render(request, 'subscriptions/user_detail_view.html', {'subscription': user_sub_obj})
+
+
+@login_required
+def user_subscription_cancel_view(request,):
+    user_sub_obj, created = UserSubscription.objects.get_or_create(user=request.user)
+    if request.method == "POST":
+        print("refresh subscription")
+        if user_sub_obj.stripe_id:
+            sub_data = helpers.billing.cancel_subscription(user_sub_obj.stripe_id, reason="User wanted to end", raw=False)
+            for k,v in sub_data.items():
+                setattr(user_sub_obj, k, v)
+            user_sub_obj.save()
+            return redirect(user_sub_obj.get_absolute_url())
+    return render(request, 'subscriptions/user_detail_view.html', {'subscription': user_sub_obj})
 
 # Create your views here.
 def subscription_price_view(request, interval="month"):
