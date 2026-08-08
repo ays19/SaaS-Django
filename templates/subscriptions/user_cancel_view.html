@@ -8,8 +8,9 @@
 <h1 class="text-lg font-medium">Are you sure you want to cancel {{ subscription.plan_name }}?</h1>
 
 <form action="" method="POST">{% csrf_token %}
-    <button type="submit">Refresh</button>
+    <button type="submit">Yes, cancel</button>
 </form>
+<a href="{{ subscription.get_absolute_url }}">No, go back</a>
 
 {% else %}
 

@@ -165,6 +165,9 @@ class UserSubscription(models.Model):
     def get_absolute_url(self):
         return reverse("user_subscription")
 
+    def get_cancel_url(self):
+            return reverse("user_subscription_cancel")
+
     @property
     def is_active_status(self):
         return self.status in [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING
