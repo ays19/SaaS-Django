@@ -1,12 +1,14 @@
 {% extends "base.html" %}
 
-{% block head_title %}{{ page_title }} - {{ block.super }}{% endblock head_title %}
+{% block head_title %}Your Subscription - {{ block.super }}{% endblock head_title %}
 
  {% block content %}
 <h1 class="text-lg font-medium">Your Subscription</h1>
-
-    <p>Page visits: {{ page_visit_count }}</p>
-    <p>percent: {{ percent }}</p>
-    <p>Total visits: {{ total_visit_count }}</p>
+<form action="" method="POST">{% csrf_token %}
+    <button type="submit">Refresh</button>
+</form>
+    {% for k,v in subscription.items %}
+    <p>{{ k }}: {{ v }}</p>
+    {% endfor %}
 
     {% endblock content %}
