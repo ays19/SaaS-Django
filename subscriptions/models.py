@@ -1,3 +1,4 @@
+import datetime 
 import helpers.billing
 from django.db import models
 from django.db.models import Q
@@ -5,6 +6,7 @@ from django.contrib.auth.models import Group, Permission
 from django.db.models.signals import post_save
 from django.conf import settings
 from django.urls import reverse
+from django.utils import timezone
 
 User = settings.AUTH_USER_MODEL # "auth.user"
 
@@ -152,6 +154,20 @@ class SubscriptionStatus(models.TextChoices):
     PAUSED = 'paused', 'Paused'
 
 class UserSubscriptionQuerySet(models.QuerySet):
+    def by_days_left(self, days_left=7):
+        now = timezone.now()
+        in_n_days = now + datetime.timedelta(days=days_left)
+        day_start = in_n_days.replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = in_n_days.replace(hour=23, minute=59, second=59, microsecond=999999)
+        return self.filter(current_period_end__gte=day_start, current_period_end__lte=day_end)
+
+    def by_days_ago(self, days_ago=3):
+        now = timezone.now()
+        in_n_days = now - datetime.timedelta(days=days_ago)
+        day_start = in_n_days.replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = in_n_days.replace(hour=23, minute=59, second=59, microsecond=999999)
+        return self.filter(current_period_end__gte=day_start, current_period_end__lte=day_end)
+
     def by_active_trialling(self):
         active_qs_lookup = (
             Q(status=SubscriptionStatus.ACTIVE) |
