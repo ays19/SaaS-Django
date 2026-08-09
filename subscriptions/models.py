@@ -1,5 +1,6 @@
 import helpers.billing
 from django.db import models
+from django.db.models import Q
 from django.contrib.auth.models import Group, Permission
 from django.db.models.signals import post_save
 from django.conf import settings
@@ -151,6 +152,13 @@ class SubscriptionStatus(models.TextChoices):
     PAUSED = 'paused', 'Paused'
 
 class UserSubscriptionQuerySet(models.QuerySet):
+    def by_active_trialling(self):
+        active_qs_lookup = (
+            Q(status=SubscriptionStatus.ACTIVE) |
+            Q(status=SubscriptionStatus.TRIALING)
+        )
+        return self.filter(active_qs_lookup)
+
     def by_user_ids(self, user_ids=None):
         qs = self
         if isinstance(user_ids, list):
