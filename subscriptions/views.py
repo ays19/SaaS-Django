@@ -1,4 +1,5 @@
 import helpers.billing
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -15,6 +16,7 @@ def user_subscription_view(request,):
             for k,v in sub_data.items():
                 setattr(user_sub_obj, k, v)
             user_sub_obj.save()
+            messages.success(request, "Your subscription details have been refreshed.")
             return redirect(user_sub_obj.get_absolute_url())
     return render(request, 'subscriptions/user_detail_view.html', {'subscription': user_sub_obj})
 
@@ -29,6 +31,7 @@ def user_subscription_cancel_view(request,):
             for k,v in sub_data.items():
                 setattr(user_sub_obj, k, v)
             user_sub_obj.save()
+            messages.success(request, "Your subscription has been canceled.")
             return redirect(user_sub_obj.get_absolute_url())
     return render(request, 'subscriptions/user_cancel_view.html', {'subscription': user_sub_obj})
 
