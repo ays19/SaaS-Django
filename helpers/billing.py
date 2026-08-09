@@ -96,7 +96,7 @@ def get_checkout_session(stripe_id, raw=False):
 
 def get_subscription(stripe_id, raw=False):
     response = stripe.Subscription.retrieve(stripe_id)
-    print(response)
+    # print(response)
     if raw:
         return response
     return serialize_subscription_data(response)
