@@ -23,4 +23,3 @@ jobs:
       - name: Django Tests
         run: |
           python manage.py test
-          python -m pip install -r requirements.txt
