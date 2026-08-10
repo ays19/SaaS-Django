@@ -32,6 +32,7 @@ jobs:
         run: | 
           npm i -g neon
       - name: Delete previous branch
+        continue-on-error: true
         run: |
           neon branches delete "${{ env.NEON_GITHUB_BRANCH }}" --project-id "${{ env.NEON_PROJECT_ID }}"
       - name: Create new Github Actions branch
@@ -56,3 +57,8 @@ jobs:
       - name: Django Tests
         run: |
           python manage.py test
+
+      - name: Clean Up Step
+        continue-on-error: true
+        run: |
+          neon branches delete "${{ env.NEON_GITHUB_BRANCH }}" --project-id "${{ env.NEON_PROJECT_ID }}"
