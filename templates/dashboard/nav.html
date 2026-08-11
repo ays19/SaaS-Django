@@ -35,7 +35,7 @@
             </svg>
             <span class="sr-only">Toggle sidebar</span>
           </button>
-          <a href="https://flowbite.com" class="flex items-center justify-between mr-4">
+          <a href="{% url 'home' %}" class="flex items-center justify-between mr-4">
            
             <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">SaaS _Django</span>
           </a>
@@ -370,7 +370,7 @@
           <button
             type="button"
             data-dropdown-toggle="apps-dropdown"
-            class="p-2 text-gray-500 rounded-lg hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
+            class="hidden p-2 text-gray-500 rounded-lg hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
           >
             <span class="sr-only">View notifications</span>
             <!-- Icon -->
@@ -587,17 +587,18 @@
           </div>
           <button
             type="button"
-            class="flex mx-3 text-sm bg-gray-800 rounded-full md:mr-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
+            class="flex text-white px-4 py-2 mx-3 text-sm bg-gray-800 md:mr-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
             id="user-menu-button"
             aria-expanded="false"
             data-dropdown-toggle="dropdown"
           >
             <span class="sr-only">Open user menu</span>
             <img
-              class="w-8 h-8 rounded-full"
+              class="hidden w-8 h-8 rounded-full"
               src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/avatars/michael-gough.png"
               alt="user photo"
             />
+            {{ request.user.username.0 }}
           </button>
           <!-- Dropdown menu -->
           <div
@@ -607,11 +608,11 @@
             <div class="py-3 px-4">
               <span
                 class="block text-sm font-semibold text-gray-900 dark:text-white"
-                >Neil Sims</span
+                >{{ request.user.username }}</span
               >
               <span
                 class="block text-sm text-gray-900 truncate dark:text-white"
-                >name@flowbite.com</span
+                >{{ request.user.email }}</span
               >
             </div>
             <ul
@@ -621,20 +622,28 @@
               <li>
                 <a
                   href="#"
-                  class="block py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-400 dark:hover:text-white"
+                  class="hidden block py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-400 dark:hover:text-white"
                   >My profile</a
                 >
               </li>
               <li>
                 <a
-                  href="#"
+                  href="{% url 'pricing' %}"
                   class="block py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-400 dark:hover:text-white"
-                  >Account settings</a
+                  >Pricing</a
+                >
+              </li>
+               <li>
+                <a
+                  href="{% url 'user_subscription' %}"
+                  class="block py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-400 dark:hover:text-white"
+                  >Billing settings</a
                 >
               </li>
             </ul>
+            <!-- not in use -->
             <ul
-              class="py-1 text-gray-700 dark:text-gray-300"
+              class="hidden py-1 text-gray-700 dark:text-gray-300"
               aria-labelledby="dropdown"
             >
               <li>
@@ -716,9 +725,9 @@
             >
               <li>
                 <a
-                  href="#"
+                  href="{% url 'account_logout' %}"
                   class="block py-2 px-4 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white"
-                  >Sign out</a
+                  >Logout</a
                 >
               </li>
             </ul>
