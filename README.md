@@ -9,6 +9,7 @@
 [![Stripe](https://img.shields.io/badge/Stripe-Payments-635BFF?logo=stripe&logoColor=white)](https://stripe.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![DaisyUI](https://img.shields.io/badge/DaisyUI-5.x-5A0EF8?logo=daisyui&logoColor=white)](https://daisyui.com/)
+[![Flowbite](https://img.shields.io/badge/Flowbite-UI-1A56DB?logo=flowbite&logoColor=white)](https://flowbite.com/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![Railway](https://img.shields.io/badge/Railway-Deploy-0B0D0E?logo=railway&logoColor=white)](https://railway.app/)
 
@@ -57,19 +58,36 @@ It is designed as a **real-world foundation** for any subscription-based web pro
 - `@staff_member_required` — staff-only pages.
 - Password-protected routes for sensitive content.
 
+### Landing Page
+- Public marketing landing page with hero section, feature highlights, and social proof stats.
+- Authenticated users are automatically redirected to the dashboard.
+- Social proof section displays dynamically formatted page views and social views using `helpers/numbers.py`.
+
+### Dashboard
+- Authenticated users land on a dedicated dashboard with a **sidebar navigation**, **top nav bar**, and **grid-based content area**.
+- Dashboard layout is modular — `base.html`, `nav.html`, and `sidebar.html` partials for maintainability.
+- Nav bar shows the logged-in user's initial, username, and email; links to Pricing, Billing settings, and Logout.
+- Subscription detail page extends the dashboard layout for a consistent authenticated experience.
+
+### Auth-Aware Navigation
+- Public navbar shows Home, About, Contact, Sign Up, and Login links for anonymous users.
+- Authenticated users see Dashboard and Logout links instead.
+- Dashboard nav uses Django `{% url %}` tags throughout — no hardcoded URLs.
+
 ### Analytics — Page Visit Tracking
 - `PageVisit` model logs every page hit with path and timestamp.
-- Homepage dynamically calculates per-path visits, total site visits, and visit percentage.
+- Landing page displays formatted visit counts (e.g. `8.2M`) via the `shorten_number()` helper.
 
 ### Reusable UI Component System
 - Reusable template components via **Slippers** (Django component library) — form fields, pricing cards, navigation.
-- **DaisyUI + Tailwind CSS** for a modern, themed UI with dark mode support.
+- **DaisyUI + Tailwind CSS + Flowbite** for a modern, themed UI with dark mode support.
 - **django-allauth-ui** integration for pre-styled authentication pages.
+- Tailwind build pipeline via `npm run dev` (watch) and `npm run build` (minified production CSS).
 
 ### Custom Management Commands
 | Command | Description |
 |---------|-------------|
-| `vendor_pull` | Downloads external vendor static files (Flowbite CSS/JS) |
+| `vendor_pull` | Downloads external vendor static files (Flowbite CSS/JS, SaaS theme) |
 | `sync_subs` | Synchronizes subscription permissions across all active user groups |
 
 ### Production-Ready Deployment
@@ -89,21 +107,27 @@ graph TD
     C[Checkouts - Stripe Sessions]
     D[Subscriptions - Plans / Prices / UserSubscriptions]
     E[Customers - Stripe Customer Mapping]
-    F[Helpers - billing.py SDK Layer]
+    F[Helpers - billing.py / numbers.py]
     G[Profiles - User Directory]
     H[Visits - Page Analytics]
     I[Commando - Management Commands]
-    J[Templates - Slippers + DaisyUI]
+    J[Templates - Slippers + Flowbite]
+    N[Landing - Public Marketing Page]
+    O[Dashboard - Authenticated Home]
 
     K[(SQLite / PostgreSQL)]
     L[Stripe API]
     M[Railway - Cloud Deploy]
 
+    A --> N
+    A --> O
     A --> B
     A --> C
     A --> D
     A --> G
-    A --> J
+    N --> H
+    N --> F
+    O --> J
     B --> E
     C --> F
     D --> F
@@ -121,7 +145,7 @@ graph TD
     classDef external fill:#8b5cf6,stroke:#7c3aed,color:#fff
 
     class A client
-    class B,C,D,G app
+    class B,C,D,G,N,O app
     class E,F,H,I,J helper
     class K,L,M external
 ```
@@ -154,7 +178,7 @@ SaaS-django/
 ├── Saas_Django/               # Project configuration
 │   ├── settings.py            #   Global settings, installed apps, middleware
 │   ├── urls.py                #   Root URL routing
-│   └── views.py               #   Core views (home, protected pages)
+│   └── views.py               #   Core views (about, protected pages)
 │
 ├── auth/                      # Custom authentication helpers
 ├── checkouts/                 # Stripe Checkout session flow
@@ -163,8 +187,13 @@ SaaS-django/
 │   └── management/commands/   #   vendor_pull, sync_subs
 ├── customers/                 # Customer <-> Stripe mapping
 │   └── models.py              #   Customer model, allauth signal handlers
+├── dashboard/                 # Authenticated user dashboard
+│   └── views.py               #   Login-required dashboard view
 ├── helpers/
-│   └── billing.py             # Stripe SDK abstraction layer
+│   ├── billing.py             #   Stripe SDK abstraction layer
+│   └── numbers.py             #   Number formatting (e.g. 8.2M)
+├── landing/                   # Public marketing landing page
+│   └── views.py               #   Landing page with auth redirect to dashboard
 ├── profiles/                  # User profile directory & detail views
 ├── subscriptions/             # Subscription engine
 │   ├── models.py              #   Subscription, SubscriptionPrice, UserSubscription
@@ -174,16 +203,20 @@ SaaS-django/
 │   └── models.py              #   PageVisit model
 │
 ├── templates/                 # Global template directory
-│   ├── base.html              #   Root layout
+│   ├── base.html              #   Root layout (public pages)
+│   ├── dashboard/             #   Dashboard layout (base, nav, sidebar, main)
+│   ├── landing/               #   Landing page (hero, feature, proof)
 │   ├── components/            #   Reusable Slippers components (form, etc.)
 │   ├── subscriptions/         #   Pricing page & card snippets
 │   ├── allauth/               #   Customized allauth templates
-│   └── nav/                   #   Navigation components
+│   └── nav/                   #   Navigation components (auth-aware)
 │
+├── static/                    # Compiled static assets
+├── staticfiles/               # Collected static files (CSS, images, vendors)
 ├── Dockerfile                 # Multi-stage production build
 ├── railway.json               # Railway deployment config
 ├── requirements.txt           # Python dependencies
-├── package.json               # Frontend tooling (Tailwind, DaisyUI)
+├── package.json               # Frontend tooling (Tailwind dev/build scripts)
 └── tailwind.config.js         # Tailwind CSS configuration
 ```
 
@@ -222,9 +255,19 @@ DJANGO_SECRET_KEY=your-secret-key
 DJANGO_DEBUG=True
 BASE_URL=http://127.0.0.1:8000
 STRIPE_SECRET_KEY=sk_test_...
+STRIPE_TEST_OVERRIDE=False          # Set to True in CI to allow test keys without DJANGO_DEBUG
 ```
 
-### 3. Initialize the Application
+### 3. Build Frontend Assets
+
+```bash
+npm install
+npm run build            # one-time production build
+# or
+npm run dev              # watch mode during development
+```
+
+### 4. Initialize the Application
 
 ```bash
 python manage.py migrate
@@ -233,7 +276,7 @@ python manage.py sync_subs
 python manage.py createsuperuser
 ```
 
-### 4. Run the Development Server
+### 5. Run the Development Server
 
 ```bash
 python manage.py runserver
@@ -262,7 +305,7 @@ docker run -p 8000:8000 \
 
 | Route | Access | Description |
 |-------|--------|-------------|
-| `/` | Public | Homepage with visit analytics |
+| `/` | Public / Auth | Landing page (anonymous) or Dashboard (authenticated) |
 | `/pricing/` | Public | Subscription plans with monthly/yearly toggle |
 | `/about/` | Public | About page |
 | `/profiles/` | Public | Active user directory |
