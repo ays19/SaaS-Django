@@ -4,6 +4,8 @@
   "description": "A modular Django web application designed to demonstrate user authentication, user profiles, subscription permission management, Stripe billing integration, dynamic pricing pages, protected routes, template inheritance, sub-templates (snippets), vendor asset management, database interaction (tracking page visit statistics), and containerized deployment.",
   "main": "tailwind.config.js",
   "scripts": {
+    "dev": "tailwindcss -i ./src/input.css -o ./staticfiles/css/output.css --watch",
+    "build": "tailwindcss -i ./src/input.css -o ./staticfiles/css/output.css --minify",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
