@@ -1,7 +1,15 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+from subscriptions.models import UserSubscription
+from visits.models import PageVisit
 
 # Create your views here.
 @login_required
 def dashboard_view(request):
-    return render(request, 'dashboard/main.html', {})
+    user_sub_obj = UserSubscription.objects.filter(user=request.user).first()
+    context = {
+        "user_sub": user_sub_obj,
+        "total_site_visits": PageVisit.objects.count(),
+        "recent_visits": PageVisit.objects.all().order_by("-timestamp")[:8],
+    }
+    return render(request, 'dashboard/main.html', context)

@@ -2,56 +2,97 @@
 
 {% block head_title %}Build Your SaaS Now - {{ block.super }}{% endblock head_title %}
 
-  {% block content %}
+{% block content %}
 
-   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-        <div
-          class="border-2 border-dashed border-gray-300 rounded-lg dark:border-gray-600 h-32 md:h-64"
-        ></div>
-        <div
-          class="border-2 border-dashed rounded-lg border-gray-300 dark:border-gray-600 h-32 md:h-64"
-        ></div>
-        <div
-          class="border-2 border-dashed rounded-lg border-gray-300 dark:border-gray-600 h-32 md:h-64"
-        ></div>
-        <div
-          class="border-2 border-dashed rounded-lg border-gray-300 dark:border-gray-600 h-32 md:h-64"
-        ></div>
-      </div>
-      <div
-        class="border-2 border-dashed rounded-lg border-gray-300 dark:border-gray-600 h-96 mb-4"
-      ></div>
-      <div class="grid grid-cols-2 gap-4 mb-4">
-        <div
-          class="border-2 border-dashed rounded-lg border-gray-300 dark:border-gray-600 h-48 md:h-72"
-        ></div>
-        <div
-          class="border-2 border-dashed rounded-lg border-gray-300 dark:border-gray-600 h-48 md:h-72"
-        ></div>
-        <div
-          class="border-2 border-dashed rounded-lg border-gray-300 dark:border-gray-600 h-48 md:h-72"
-        ></div>
-        <div
-          class="border-2 border-dashed rounded-lg border-gray-300 dark:border-gray-600 h-48 md:h-72"
-        ></div>
-      </div>
-      <div
-        class="border-2 border-dashed rounded-lg border-gray-300 dark:border-gray-600 h-96 mb-4"
-      ></div>
-      <div class="grid grid-cols-2 gap-4">
-        <div
-          class="border-2 border-dashed rounded-lg border-gray-300 dark:border-gray-600 h-48 md:h-72"
-        ></div>
-        <div
-          class="border-2 border-dashed rounded-lg border-gray-300 dark:border-gray-600 h-48 md:h-72"
-        ></div>
-        <div
-          class="border-2 border-dashed rounded-lg border-gray-300 dark:border-gray-600 h-48 md:h-72"
-        ></div>
-        <div
-          class="border-2 border-dashed rounded-lg border-gray-300 dark:border-gray-600 h-48 md:h-72"
-        ></div>
-      </div>
-    
+  <!-- Stat cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
 
-  {% endblock content %}
+    <div class="p-4 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+      <p class="text-sm text-gray-500 dark:text-gray-400">Current Plan</p>
+      <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1">
+        {% if user_sub and user_sub.plan_name %}{{ user_sub.plan_name }}{% else %}No Plan{% endif %}
+      </p>
+    </div>
+
+    <div class="p-4 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+      <p class="text-sm text-gray-500 dark:text-gray-400">Subscription Status</p>
+      <p class="text-2xl font-semibold mt-1
+        {% if user_sub.is_active_status %}text-green-600 dark:text-green-400{% else %}text-gray-900 dark:text-white{% endif %}">
+        {% if user_sub and user_sub.status %}{{ user_sub.get_status_display }}{% else %}Inactive{% endif %}
+      </p>
+    </div>
+
+    <div class="p-4 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+      <p class="text-sm text-gray-500 dark:text-gray-400">Renews On</p>
+      <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1">
+        {% if user_sub and user_sub.current_period_end %}{{ user_sub.current_period_end|date:"M j, Y" }}{% else %}&mdash;{% endif %}
+      </p>
+    </div>
+
+    <div class="p-4 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+      <p class="text-sm text-gray-500 dark:text-gray-400">Total Site Visits</p>
+      <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1">{{ total_site_visits }}</p>
+    </div>
+
+  </div>
+
+  {% if not user_sub or not user_sub.is_active_status %}
+  <div class="p-4 mb-4 text-sm rounded-lg bg-blue-50 text-blue-800 dark:bg-gray-800 dark:text-blue-400 flex items-center justify-between" role="alert">
+    <span>You don't have an active subscription yet.</span>
+    <a href="{% url 'pricing' %}" class="font-medium underline hover:no-underline">View plans</a>
+  </div>
+  {% endif %}
+
+  <!-- Quick actions -->
+  <div class="p-4 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700 mb-4">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Quick Actions</h3>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <a href="{% url 'user_subscription' %}" class="p-3 text-center text-sm font-medium rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600">
+        Manage Billing
+      </a>
+      <a href="{% url 'pricing' %}" class="p-3 text-center text-sm font-medium rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600">
+        View Plans
+      </a>
+      <a href="/profiles/{{ request.user.username }}/" class="p-3 text-center text-sm font-medium rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600">
+        My Profile
+      </a>
+      {% if user_sub and user_sub.is_active_status %}
+      <a href="{% url 'user_subscription_cancel' %}" class="p-3 text-center text-sm font-medium rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600">
+        Cancel Plan
+      </a>
+      {% else %}
+      <a href="{% url 'pricing' %}" class="p-3 text-center text-sm font-medium rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600">
+        Upgrade
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recent site activity -->
+  <div class="p-4 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Recent Site Activity</h3>
+    {% if recent_visits %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-left text-gray-700 dark:text-gray-300">
+        <thead class="text-xs text-gray-500 uppercase dark:text-gray-400 border-b dark:border-gray-700">
+          <tr>
+            <th class="py-2 pr-4">Path</th>
+            <th class="py-2">Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for visit in recent_visits %}
+          <tr class="border-b dark:border-gray-700 last:border-0">
+            <td class="py-2 pr-4 font-mono text-xs">{{ visit.path }}</td>
+            <td class="py-2 text-xs">{{ visit.timestamp|date:"M j, Y H:i" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-sm text-gray-500 dark:text-gray-400">No visits recorded yet.</p>
+    {% endif %}
+  </div>
+
+{% endblock content %}
