@@ -47,6 +47,21 @@ if DEBUG:
         "127.0.0.1"
     ]
 
+# Railway (and most PaaS hosts) terminate HTTPS at a proxy and forward plain
+# HTTP to the container, adding an X-Forwarded-Proto header. Without telling
+# Django to trust that header, request.is_secure() is always False in
+# production, which breaks secure cookies and any https-based redirects even
+# though the site is genuinely served over HTTPS.
+CSRF_TRUSTED_ORIGINS = config(
+    "CSRF_TRUSTED_ORIGINS",
+    default="https://*.railway.app",
+).split(",")
+
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
 # Application definition
 
 INSTALLED_APPS = [
