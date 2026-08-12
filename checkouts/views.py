@@ -1,3 +1,4 @@
+import logging
 import helpers.billing
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -9,6 +10,7 @@ from django.http import HttpResponse
 from subscriptions.models import SubscriptionPrice, Subscription, UserSubscription
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 BASE_URL = settings.BASE_URL
 # Create your views here.
@@ -21,7 +23,7 @@ def checkout_redirect_view(request):
     checkout_subscription_price_id = request.session.get("checkout_subscription_price_id")
     try:
         obj = SubscriptionPrice.objects.get(id=checkout_subscription_price_id)
-    except:
+    except SubscriptionPrice.DoesNotExist:
         obj = None
     if checkout_subscription_price_id is None or obj is None:
         return redirect("pricing")
