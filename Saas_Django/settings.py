@@ -17,7 +17,13 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Email config
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# Temporarily route emails to the console to prevent production crashes
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Once you have a valid App Password configured in Railway Variables, 
+# you can delete the line above and uncomment the line below:
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
 EMAIL_HOST=config("EMAIL_HOST", default="smtp.gmail.com")
 EMAIL_PORT=config("EMAIL_PORT", cast=str, default="587") # Recommended
 EMAIL_HOST_USER=config("EMAIL_HOST_USER", default="shararbic3@gmail.com")
@@ -169,7 +175,10 @@ AUTH_PASSWORD_VALIDATORS = [
 LOGIN_REDIRECT_URL = "/"
 ACCOUNT_LOGIN_METHODS = {"username", "email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+
+# Temporarily bypass email verification to allow immediate login
+ACCOUNT_EMAIL_VERIFICATION = "none" 
+
 ACCOUNT_EMAIL_SUBJECT_PREFIX = "[ays19]"
 
 AUTHENTICATION_BACKENDS = [
