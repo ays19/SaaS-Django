@@ -44,17 +44,32 @@ COPY . /code
 RUN pip install -r /tmp/requirements.txt
 RUN pip install gunicorn
 
-ARG DJANGO_SECRET_KEY
-ENV DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-
 ARG DJANGO_DEBUG=0
 ENV DJANGO_DEBUG=${DJANGO_DEBUG}
- 
+
+# DJANGO_SECRET_KEY is sensitive, so it must never be baked into the image via
+# ARG/ENV (that leaves it readable in `docker history`/image layers forever).
+# The commands below only need Django's settings to import successfully - they
+# don't do anything cryptographic with the key - so we pass a disposable,
+# build-only value inline to these two RUN steps. It never becomes an image
+# layer. The real secret is supplied at container start time via your host's
+# runtime environment variables (e.g. Railway's service "Variables" tab), not
+# through this Dockerfile.
+#
 # database isn't available during build
 # run any other commands that do not need the database
 # such as:
-RUN python manage.py vendor_pull
-RUN python manage.py collectstatic --noinput
+RUN DJANGO_SECRET_KEY="build-time-only-unused-in-production" \
+    python manage.py vendor_pull
+# --ignore=input.css: django-allauth-ui ships its raw Tailwind v4 source file
+# (allauth_ui/input.css, containing `@import "tailwindcss";`) alongside the
+# compiled allauth_ui/output.css that templates actually use. Whitenoise's
+# manifest storage tries to post-process every .css file it collects and
+# chokes on that `@import`, treating "tailwindcss" as a missing relative file
+# reference. input.css is never linked from any template, so it's safe to
+# skip collecting it entirely.
+RUN DJANGO_SECRET_KEY="build-time-only-unused-in-production" \
+    python manage.py collectstatic --noinput --ignore=input.css
 #whitenoise -> s3
 
 # set the Django default project name
