@@ -226,12 +226,14 @@ STATICFILES_DIRS = [
 #local cdn
 STATIC_ROOT = BASE_DIR / 'local-cdn'
 
+WHITENOISE_MANIFEST_STRICT = False
+
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",  # Updated from CompressedManifestStaticFilesStorage
     },
 }
 
