@@ -10,6 +10,5 @@ def dashboard_view(request):
     context = {
         "user_sub": user_sub_obj,
         "total_site_visits": PageVisit.objects.count(),
-        "recent_visits": PageVisit.objects.all().order_by("-timestamp")[:8],
     }
     return render(request, 'dashboard/main.html', context)
