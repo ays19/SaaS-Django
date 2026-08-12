@@ -54,12 +54,12 @@ def checkout_finalize_view(request): #here all things coming from stripe
     subscription_data = {**checkout_data}
     try:
         sub_obj = Subscription.objects.get(subscriptionprice__stripe_id=plan_id)
-    except:
+    except (Subscription.DoesNotExist, Subscription.MultipleObjectsReturned):
         sub_obj = None
 
     try:
         user_obj = User.objects.get(customer__stripe_id=customer_id)
-    except:
+    except (User.DoesNotExist, User.MultipleObjectsReturned):
         user_obj = None
 
     _user_sub_exists = False
@@ -74,7 +74,11 @@ def checkout_finalize_view(request): #here all things coming from stripe
         _user_sub_exists = True
     except UserSubscription.DoesNotExist:
         _user_sub_obj = UserSubscription.objects.create(user=user_obj, **updated_sub_options)
-    except:
+    except Exception:
+        logger.exception(
+        "Unexpected error creating/loading UserSubscription for user_id=%s",
+        getattr(user_obj, "id", None),
+    )
         _user_sub_obj = None
     if None in [sub_obj, user_obj, _user_sub_obj]:
         return HttpResponse("There is a error with your account. please contact us.")
@@ -85,8 +89,12 @@ def checkout_finalize_view(request): #here all things coming from stripe
         if old_stripe_id is not None and not same_stripe_id:
             try:
                 helpers.billing.cancel_subscription(old_stripe_id, reason="Auto ended new membership", feedback="other")
-            except:
-                pass
+            except Exception:
+                logger.exception(
+                    "Failed to cancel old Stripe subscription %s while upgrading user_id=%s",
+                    old_stripe_id,
+                    getattr(user_obj, "id", None),
+    )
         # assign new sub
         for k, v in updated_sub_options.items():
             setattr(_user_sub_obj, k, v)
