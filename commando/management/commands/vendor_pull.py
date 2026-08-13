@@ -2,7 +2,7 @@ import helpers
 
 from typing import Any
 from django.conf import settings
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 
 STATICFILES_VENDOR_DIR = getattr(settings, "STATICFILES_VENDOR_DIR")
 
@@ -19,13 +19,15 @@ class Command(BaseCommand):
     def handle(self, *arg: Any, **options: Any):
         self.stdout.write("Downloading vendor static files...")
 
-        completed_urls =[]
+        completed_urls = []
+        failed_names = []
         for name, url in VENDOR_STATICFILES.items():
             out_path = STATICFILES_VENDOR_DIR / name
             dl_success = helpers.download_to_local(url, out_path)
             if dl_success:
                 completed_urls.append(url)
             else:
+                failed_names.append(name)
                 self.stdout.write(f"Failed to download {url}")
 
         if set(completed_urls) == set(VENDOR_STATICFILES.values()):
@@ -33,6 +35,7 @@ class Command(BaseCommand):
                 self.style.SUCCESS("Successfully updated all vendor static files.")
             )
         else:
-            self.stdout.write(
-                self.style.WARNING("Some files were not updated.")
+            raise CommandError(
+                f"vendor_pull failed to download: {', '.join(failed_names)}. "
+                "Aborting build — see logs above for the underlying network/HTTP error."
             )
