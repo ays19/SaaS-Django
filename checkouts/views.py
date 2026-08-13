@@ -27,27 +27,86 @@ def checkout_redirect_view(request):
         obj = None
     if checkout_subscription_price_id is None or obj is None:
         return redirect("pricing")
-    customer_stripe_id = request.user.customer.stripe_id
+
+    customer = getattr(request.user, "customer", None)
+    if customer is None:
+        logger.error(
+            "User id=%s has no Customer record at checkout time.",
+            request.user.id,
+        )
+        messages.error(request, "We couldn't find your billing profile. Please contact support.")
+        return redirect("pricing")
+
+    if not customer.stripe_id:
+        logger.warning(
+            "User id=%s attempted checkout before email confirmation / Stripe customer creation "
+            "(init_email_confirmed=%s).",
+            request.user.id,
+            customer.init_email_confirmed,
+        )
+        messages.error(
+            request,
+            "Please confirm your email address before subscribing. "
+            "Check your inbox for the confirmation link, or request a new one."
+        )
+        return redirect("pricing")
+
+    customer_stripe_id = customer.stripe_id
     success_url_path = reverse("stripe-checkout-end")
     pricing_url_path = reverse("pricing")
     success_url = f"{BASE_URL}{success_url_path}"
     cancel_url = f"{BASE_URL}{pricing_url_path}"
     price_stripe_id = obj.stripe_id
 
-    url = helpers.billing.start_checkout_session(
-        customer_stripe_id,
-        success_url=success_url,
-        cancel_url=cancel_url,
-        price_stripe_id=price_stripe_id,
-        raw=False
-        
-    )
+    if not BASE_URL:
+        logger.error("BASE_URL setting is empty/None — checkout success/cancel URLs will be invalid.")
+
+    try:
+        url = helpers.billing.start_checkout_session(
+            customer_stripe_id,
+            success_url=success_url,
+            cancel_url=cancel_url,
+            price_stripe_id=price_stripe_id,
+            raw=False
+        )
+    except Exception:
+        logger.exception(
+            "Stripe checkout session creation failed for user_id=%s, price_id=%s, "
+            "customer_stripe_id=%s, success_url=%s",
+            request.user.id,
+            checkout_subscription_price_id,
+            customer_stripe_id,
+            success_url,
+        )
+        messages.error(request, "Something went wrong starting checkout. Please try again shortly.")
+        return redirect("pricing")
+
     return redirect(url)
 
 
 def checkout_finalize_view(request): #here all things coming from stripe
     session_id = request.GET.get('session_id')
-    checkout_data = helpers.billing.get_checkout_customer_plan(session_id)
+    if not session_id:
+        logger.warning("checkout_finalize_view hit with no session_id in querystring.")
+        messages.error(request, "We couldn't verify your checkout session. Please try again.")
+        return redirect("pricing")
+
+    try:
+        checkout_data = helpers.billing.get_checkout_customer_plan(session_id)
+    except Exception:
+        logger.exception(
+            "Failed to retrieve checkout/customer/plan from Stripe for session_id=%s "
+            "(commonly caused by a test-mode session_id being looked up with a live-mode "
+            "STRIPE_SECRET_KEY, or vice versa, or an expired/invalid session).",
+            session_id,
+        )
+        messages.error(
+            request,
+            "We couldn't confirm your payment right now. If you were charged, "
+            "please contact support with your confirmation email."
+        )
+        return redirect("pricing")
+
     plan_id = checkout_data.pop('plan_id')
     customer_id = checkout_data.pop('customer_id')
     sub_stripe_id = checkout_data.pop('sub_stripe_id')
@@ -76,9 +135,9 @@ def checkout_finalize_view(request): #here all things coming from stripe
         _user_sub_obj = UserSubscription.objects.create(user=user_obj, **updated_sub_options)
     except Exception:
         logger.exception(
-        "Unexpected error creating/loading UserSubscription for user_id=%s",
-        getattr(user_obj, "id", None),
-    )
+            "Unexpected error creating/loading UserSubscription for user_id=%s",
+            getattr(user_obj, "id", None),
+        )
         _user_sub_obj = None
     if None in [sub_obj, user_obj, _user_sub_obj]:
         return HttpResponse("There is a error with your account. please contact us.")
@@ -94,7 +153,7 @@ def checkout_finalize_view(request): #here all things coming from stripe
                     "Failed to cancel old Stripe subscription %s while upgrading user_id=%s",
                     old_stripe_id,
                     getattr(user_obj, "id", None),
-    )
+                )
         # assign new sub
         for k, v in updated_sub_options.items():
             setattr(_user_sub_obj, k, v)
@@ -103,4 +162,3 @@ def checkout_finalize_view(request): #here all things coming from stripe
         return redirect(_user_sub_obj.get_absolute_url())
     context = {}
     return render(request, "checkout/success.html")
- 
