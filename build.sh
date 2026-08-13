@@ -3,5 +3,6 @@
 set -o errexit
 
 pip install -r requirements.txt
-python manage.py collectstatic --no-input
+python manage.py vendor_pull
+python manage.py collectstatic --no-input --ignore=input.css
 python manage.py migrate
