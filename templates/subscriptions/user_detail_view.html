@@ -9,13 +9,34 @@
     <form action="" method="POST">
       {% csrf_token %}
       <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
         </svg>
         Refresh
       </button>
     </form>
   </div>
+
+  {% if subscription.cancel_at_period_end %}
+  <div style="padding: 1rem 1.25rem; background: #1f2937; border-radius: 0.75rem;
+              border: 1px solid #991b1b; display: flex; align-items: center;
+              justify-content: space-between; margin-bottom: 1rem;">
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <svg style="width: 20px; height: 20px; flex-shrink: 0;" fill="none" stroke="#f87171" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      </svg>
+      <div>
+        <p style="font-size: 0.875rem; font-weight: 600; color: #f87171; margin: 0 0 0.2rem;">
+          Subscription cancelled
+        </p>
+        <p style="font-size: 0.875rem; color: #9ca3af; margin: 0;">
+          You still have access until {{ subscription.current_period_end|date:"M j, Y" }}.
+        </p>
+      </div>
+    </div>
+  </div>
+  {% endif %}
 
   <div class="p-6 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700 mb-4">
 
@@ -24,13 +45,23 @@
         <p class="text-sm text-gray-500 dark:text-gray-400">Plan</p>
         <p class="text-2xl font-semibold text-gray-900 dark:text-white mt-1">{{ subscription.plan_name|default:"No Plan" }}</p>
       </div>
-      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-        {% if subscription.is_active_status %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
-        {% else %}bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300{% endif %}">
-        <span class="w-2 h-2 rounded-full mr-2
-          {% if subscription.is_active_status %}bg-green-500{% else %}bg-gray-400{% endif %}"></span>
-        {{ subscription.status|title|default:"Inactive" }}
-      </span>
+
+      {% if subscription.cancel_at_period_end %}
+        <span style="display: inline-flex; align-items: center; padding: 0.25rem 0.75rem;
+                     border-radius: 9999px; font-size: 0.875rem; font-weight: 500;
+                     background: #450a0a; color: #f87171;">
+          <span style="width: 8px; height: 8px; border-radius: 50%; background: #f87171; margin-right: 0.5rem;"></span>
+          Cancelled
+        </span>
+      {% else %}
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+          {% if subscription.is_active_status %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300
+          {% else %}bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300{% endif %}">
+          <span class="w-2 h-2 rounded-full mr-2
+            {% if subscription.is_active_status %}bg-green-500{% else %}bg-gray-400{% endif %}"></span>
+          {{ subscription.status|title|default:"Inactive" }}
+        </span>
+      {% endif %}
     </div>
 
     <dl class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-gray-100 dark:border-gray-700">
@@ -43,7 +74,9 @@
         <dd class="text-base font-medium text-gray-900 dark:text-white mt-1">{{ subscription.current_period_start|date:"M j, Y \a\t g:i A" }}</dd>
       </div>
       <div>
-        <dt class="text-sm text-gray-500 dark:text-gray-400">Renews / Ends</dt>
+        <dt class="text-sm text-gray-500 dark:text-gray-400">
+          {% if subscription.cancel_at_period_end %}Access Until{% else %}Renews / Ends{% endif %}
+        </dt>
         <dd class="text-base font-medium text-gray-900 dark:text-white mt-1">
           {{ subscription.current_period_end|timeuntil }}
           <span class="block text-sm text-gray-500 dark:text-gray-400 font-normal">{{ subscription.current_period_end|date:"M j, Y \a\t g:i A" }}</span>
@@ -53,7 +86,7 @@
 
   </div>
 
-  {% if subscription.is_active_status %}
+  {% if subscription.is_active_status and not subscription.cancel_at_period_end %}
   <div class="p-4 bg-white rounded-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700 flex items-center justify-between">
     <div>
       <p class="text-sm font-medium text-gray-900 dark:text-white">Cancel your membership</p>

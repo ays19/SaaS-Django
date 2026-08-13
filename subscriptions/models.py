@@ -227,8 +227,9 @@ class UserSubscription(models.Model):
 
     @property
     def is_active_status(self):
-        return self.status in [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING
-                               ]
+        if self.cancel_at_period_end:
+            return False
+        return self.status in [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING]
 
     @property
     def plan_name(self):
