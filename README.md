@@ -13,7 +13,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![Railway](https://img.shields.io/badge/Railway-Deploy-0B0D0E?logo=railway&logoColor=white)](https://railway.app/)
 
-[Features](#key-features) · [Architecture](#architecture) · [Tech Stack](#tech-stack) · [Getting Started](#getting-started) · [Routes](#api-routes)
+[Features](#key-features) · [Architecture](#architecture) · [Tech Stack](#tech-stack) · [Getting Started](#getting-started) · [Routes](#routes) · [CI/CD](#cicd)
 
 </div>
 
@@ -31,8 +31,9 @@ It is designed as a **real-world foundation** for any subscription-based web pro
 
 ### Stripe Billing Integration
 - **Checkout Sessions** — Redirects authenticated users to Stripe-hosted checkout with pre-filled customer data.
-- **Product & Price Sync** — `Subscription` and `SubscriptionPrice` models automatically create corresponding Stripe Products and Prices on save via the Stripe SDK.
+- **Product & Price Sync** — `Subscription` and `SubscriptionPrice` models automatically create corresponding Stripe Products and Prices on save via the Stripe SDK (API version `2024-06-20`).
 - **Checkout Finalization** — Post-payment callback resolves the Stripe session, maps the customer + plan back to Django, and provisions the user's subscription.
+- **Subscription Cancellation** — Users can cancel their subscription via `/accounts/billing/cancel/`, which sets `cancel_at_period_end` on Stripe so access continues until the billing cycle ends.
 
 ### Authentication & Customer Lifecycle
 - Full auth flow via **django-allauth** — registration, login, email confirmation, password reset, and GitHub OAuth.
@@ -43,36 +44,33 @@ It is designed as a **real-world foundation** for any subscription-based web pro
 - Tiered permission framework (`basic`, `basic_ai`, `pro`, `advanced`) mapped to Django Groups and Permissions.
 - `UserSubscription` model drives automatic group synchronization via `post_save` signals — changing a user's plan instantly updates their permissions.
 - Preserves custom (non-subscription) groups during sync to avoid overwriting admin-assigned roles.
+- Subscription statuses: `active`, `trialing`, `incomplete`, `past_due`, `cancelled`, `unpaid`, `paused`.
 
 ### Dynamic Pricing Page
 - Public `/pricing/` route renders featured monthly and yearly plans with an interval toggle.
+- Interval-specific view at `/pricing/<interval>/` for direct monthly or yearly links.
 - Each plan displays a configurable subtitle, price, and feature list pulled from the database.
 - Reusable pricing card component built with Django template snippets.
 
 ### User Profiles
-- Profile directory (`/profiles/`) listing all active users.
-- Individual profile detail pages at `/profiles/<username>/`.
-
-### Access Control & Protected Routes
-- `@login_required` — user-only pages.
-- `@staff_member_required` — staff-only pages.
-- Password-protected routes for sensitive content.
+- Profile directory (`/profiles/`) listing all active users (login required).
+- Individual profile detail pages at `/profiles/<username>/` (login required).
 
 ### Landing Page
 - Public marketing landing page with hero section, feature highlights, and social proof stats.
 - Authenticated users are automatically redirected to the dashboard.
-- Social proof section displays dynamically formatted page views and social views using `helpers/numbers.py`.
+- Social proof section displays dynamically formatted page views using `helpers/numbers.py`.
 
 ### Dashboard
 - Authenticated users land on a dedicated dashboard with a **sidebar navigation**, **top nav bar**, and **grid-based content area**.
-- Dashboard layout is modular — `base.html`, `nav.html`, and `sidebar.html` partials for maintainability.
+- Dashboard layout is modular — `base.html`, `nav.html`, `sidebar.html`, and `main.html` partials for maintainability.
 - Nav bar shows the logged-in user's initial, username, and email; links to Pricing, Billing settings, and Logout.
-- Subscription detail page extends the dashboard layout for a consistent authenticated experience.
+- User subscription detail and cancellation pages extend the dashboard layout.
 
 ### Auth-Aware Navigation
-- Public navbar shows Home, About, Contact, Sign Up, and Login links for anonymous users.
+- Public navbar shows navigation links for anonymous users.
 - Authenticated users see Dashboard and Logout links instead.
-- Dashboard nav uses Django `{% url %}` tags throughout — no hardcoded URLs.
+- All navigation uses Django `{% url %}` tags — no hardcoded URLs.
 
 ### Analytics — Page Visit Tracking
 - `PageVisit` model logs every page hit with path and timestamp.
@@ -80,19 +78,36 @@ It is designed as a **real-world foundation** for any subscription-based web pro
 
 ### Reusable UI Component System
 - Reusable template components via **Slippers** (Django component library) — form fields, pricing cards, navigation.
-- **DaisyUI + Tailwind CSS + Flowbite** for a modern, themed UI with dark mode support.
+- **DaisyUI + Tailwind CSS + Flowbite** for a modern, themed UI with light theme support.
 - **django-allauth-ui** integration for pre-styled authentication pages.
+- Custom color palette (`primary` blue-based) with Inter font family.
 - Tailwind build pipeline via `npm run dev` (watch) and `npm run build` (minified production CSS).
 
 ### Custom Management Commands
 | Command | Description |
 |---------|-------------|
-| `vendor_pull` | Downloads external vendor static files (Flowbite CSS/JS, SaaS theme) |
-| `sync_subs` | Synchronizes subscription permissions across all active user groups |
+| `vendor_pull` | Downloads external vendor static files (Flowbite CSS/JS, SaaS theme) from CDN |
+| `sync_permissions` | Synchronizes subscription-based group permissions |
+| `sync_user_subs` | Syncs user subscriptions from Stripe — supports `--day-start`, `--day-end`, `--days-ago`, `--days-left`, and `--clear-dangling` flags |
+
+### CI/CD
+
+Six GitHub Actions workflows automate testing and production maintenance:
+
+| Workflow | Trigger | Description |
+|----------|---------|-------------|
+| `1-hello-world` | Scheduled (daily) | Basic smoke test |
+| `2-test-django-basic` | Manual | Django test runner |
+| `3-test-django-env-vars` | Manual | Tests with auto-generated secret key |
+| `4-test-django-database-url` | Manual | Tests with Neon `DATABASE_URL` |
+| `5-neon-db-branch-django-tests` | Push to `main` | Creates ephemeral Neon DB branch, runs tests, cleans up |
+| `6-scheduled-production-worker` | Cron (twice daily + monthly) | Runs `sync_user_subs` to sync active subscriptions and clear dangling records |
 
 ### Production-Ready Deployment
-- **Multi-stage Dockerfile** with Gunicorn, WhiteNoise for static files, and a runtime initialization script.
+- **Multi-stage Dockerfile** with Python 3.12, Gunicorn, WhiteNoise for static files, and a runtime initialization script.
 - **Railway** deployment config (`railway.json`) for one-click cloud deployment.
+- **Render** compatible (`ALLOWED_HOSTS` includes `.onrender.com`).
+- **Neon** serverless PostgreSQL as the production database.
 - Environment-based configuration via `python-decouple` — no secrets in code.
 
 ---
@@ -107,7 +122,7 @@ graph TD
     C[Checkouts - Stripe Sessions]
     D[Subscriptions - Plans / Prices / UserSubscriptions]
     E[Customers - Stripe Customer Mapping]
-    F[Helpers - billing.py / numbers.py]
+    F[Helpers - billing / numbers / downloader / date_utils]
     G[Profiles - User Directory]
     H[Visits - Page Analytics]
     I[Commando - Management Commands]
@@ -115,9 +130,10 @@ graph TD
     N[Landing - Public Marketing Page]
     O[Dashboard - Authenticated Home]
 
-    K[(SQLite / PostgreSQL)]
+    K[(Neon PostgreSQL)]
     L[Stripe API]
-    M[Railway - Cloud Deploy]
+    M[Railway / Render]
+    P[GitHub Actions CI/CD]
 
     A --> N
     A --> O
@@ -138,6 +154,8 @@ graph TD
     H --> K
     I --> K
     I --> M
+    P --> K
+    P --> I
 
     classDef client fill:#3b82f6,stroke:#2563eb,color:#fff
     classDef app fill:#10b981,stroke:#059669,color:#fff
@@ -147,7 +165,7 @@ graph TD
     class A client
     class B,C,D,G,N,O app
     class E,F,H,I,J helper
-    class K,L,M external
+    class K,L,M,P external
 ```
 
 ---
@@ -158,16 +176,17 @@ graph TD
 |-------|-----------|
 | **Language** | Python 3.12 |
 | **Framework** | Django 6.0 |
-| **Payments** | Stripe SDK (Products, Prices, Checkout Sessions, Subscriptions) |
+| **Payments** | Stripe SDK (API v2024-06-20 — Products, Prices, Checkout Sessions, Subscriptions) |
 | **Auth** | django-allauth (email + GitHub OAuth) |
 | **UI Components** | Slippers, django-allauth-ui, django-widget-tweaks |
-| **CSS / Styling** | Tailwind CSS 3.4, DaisyUI 5.x, Flowbite |
-| **Database** | SQLite (dev) / PostgreSQL (prod) |
-| **Static Files** | WhiteNoise |
+| **CSS / Styling** | Tailwind CSS 3.4, DaisyUI 5.x, Flowbite 4.x |
+| **Database** | SQLite (dev) / Neon PostgreSQL (prod via `DATABASE_URL` + `dj-database-url`) |
+| **Static Files** | WhiteNoise (`CompressedStaticFilesStorage`) |
 | **Server** | Gunicorn |
 | **Config** | python-decouple (`.env`) |
 | **Containerization** | Docker (multi-stage build) |
-| **Deployment** | Railway |
+| **Deployment** | Railway, Render |
+| **CI/CD** | GitHub Actions (6 workflows) |
 
 ---
 
@@ -177,43 +196,84 @@ graph TD
 SaaS-django/
 ├── Saas_Django/               # Project configuration
 │   ├── settings.py            #   Global settings, installed apps, middleware
-│   ├── urls.py                #   Root URL routing
-│   └── views.py               #   Core views (about, protected pages)
+│   └── urls.py                #   Root URL routing (includes checkout & about views)
 │
-├── auth/                      # Custom authentication helpers
 ├── checkouts/                 # Stripe Checkout session flow
-│   └── views.py               #   Checkout initiation, redirect, and finalization
+│   └── views.py               #   Price redirect, checkout redirect & finalization
 ├── commando/                  # Custom management commands
-│   └── management/commands/   #   vendor_pull, sync_subs
-├── customers/                 # Customer <-> Stripe mapping
-│   └── models.py              #   Customer model, allauth signal handlers
+│   └── management/commands/   #   vendor_pull, hello_world
+├── customers/                 # Customer ↔ Stripe mapping
+│   └── models.py              #   Customer model with allauth signal handlers
 ├── dashboard/                 # Authenticated user dashboard
 │   └── views.py               #   Login-required dashboard view
-├── helpers/
+├── helpers/                   # Utility package (not a registered Django app)
 │   ├── billing.py             #   Stripe SDK abstraction layer
+│   ├── downloader.py          #   File download utility for vendor_pull
+│   ├── date_utils.py          #   Timezone-aware timestamp conversion
 │   └── numbers.py             #   Number formatting (e.g. 8.2M)
 ├── landing/                   # Public marketing landing page
 │   └── views.py               #   Landing page with auth redirect to dashboard
 ├── profiles/                  # User profile directory & detail views
+│   ├── views.py               #   Profile list & detail views (login required)
+│   └── urls.py                #   /profiles/ and /profiles/<username>/
 ├── subscriptions/             # Subscription engine
 │   ├── models.py              #   Subscription, SubscriptionPrice, UserSubscription
+│   ├── utils.py               #   Subscription refresh, cleanup, permission sync
 │   ├── admin.py               #   Admin with inline price management
-│   └── views.py               #   Pricing page view
+│   ├── views.py               #   Pricing, billing detail, and cancellation views
+│   └── management/commands/   #   sync_user_subs, sync_permissions
 ├── visits/                    # Page visit analytics
 │   └── models.py              #   PageVisit model
 │
 ├── templates/                 # Global template directory
 │   ├── base.html              #   Root layout (public pages)
-│   ├── dashboard/             #   Dashboard layout (base, nav, sidebar, main)
-│   ├── landing/               #   Landing page (hero, feature, proof)
-│   ├── components/            #   Reusable Slippers components (form, etc.)
-│   ├── subscriptions/         #   Pricing page & card snippets
-│   ├── allauth/               #   Customized allauth templates
-│   └── nav/                   #   Navigation components (auth-aware)
+│   ├── home.html              #   Home / about page
+│   ├── account/               #   Allauth account overrides (base, logout)
+│   ├── allauth/               #   Allauth layout override
+│   │   └── layouts/base.html
+│   ├── base/                  #   Shared partials
+│   │   ├── css.html           #   CSS includes
+│   │   ├── js.html            #   JS includes
+│   │   └── messages.html      #   Django messages display
+│   ├── checkout/              #   Checkout pages
+│   │   └── success.html       #   Post-checkout success
+│   ├── components/            #   Reusable Slippers components
+│   │   └── form.html          #   Form field component
+│   ├── dashboard/             #   Dashboard layout partials
+│   │   ├── base.html          #   Dashboard root layout
+│   │   ├── main.html          #   Main content area
+│   │   ├── nav.html           #   Top navigation bar
+│   │   └── sidebar.html       #   Sidebar navigation
+│   ├── landing/               #   Landing page sections
+│   │   ├── main.html          #   Landing page layout
+│   │   ├── hero.html          #   Hero section
+│   │   ├── feature.html       #   Feature highlights
+│   │   └── proof.html         #   Social proof section
+│   ├── nav/                   #   Navigation components
+│   │   └── navbar.html        #   Public navigation bar (auth-aware)
+│   ├── profiles/              #   Profile pages
+│   │   ├── list.html          #   User directory
+│   │   └── detail.html        #   Individual profile
+│   ├── protected/             #   Password-protected pages
+│   │   ├── entry.html         #   Password entry form
+│   │   ├── view.html          #   Protected content
+│   │   └── user_only.html     #   Login-required page
+│   ├── snippets/              #   Reusable snippets
+│   │   └── welcome-user-msg.html
+│   └── subscriptions/         #   Subscription pages
+│       ├── pricing.html       #   Pricing page layout
+│       ├── user_detail_view.html  # User subscription detail
+│       ├── user_cancel_view.html  # Subscription cancellation
+│       └── snippets/
+│           └── pricing-card.html  # Reusable pricing card
 │
-├── static/                    # Compiled static assets
-├── staticfiles/               # Collected static files (CSS, images, vendors)
+├── src/
+│   └── input.css              # Tailwind CSS entry point
+├── staticfiles/               # Static assets (CSS, images, vendors)
+│
+├── .github/workflows/         # CI/CD pipelines (6 workflows)
 ├── Dockerfile                 # Multi-stage production build
+├── build.sh                   # Runtime init (install, collectstatic, migrate)
 ├── railway.json               # Railway deployment config
 ├── requirements.txt           # Python dependencies
 ├── package.json               # Frontend tooling (Tailwind dev/build scripts)
@@ -248,14 +308,27 @@ pip install -r requirements.txt
 
 ### 2. Configure Environment Variables
 
-Create a `.env` file in the project root:
+Create a `.env` file in the project root (see `.env.example`):
 
 ```env
 DJANGO_SECRET_KEY=your-secret-key
-DJANGO_DEBUG=True
+DJANGO_DEBUG=1
+DATABASE_URL=                       # PostgreSQL connection string (optional — defaults to SQLite)
 BASE_URL=http://127.0.0.1:8000
+ALLOWED_HOSTS=.railway.app          # Comma-separated allowed hosts
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_TEST_OVERRIDE=False          # Set to True in CI to allow test keys without DJANGO_DEBUG
+
+# Email (optional — defaults to console backend)
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=
+EMAIL_HOST_PASSWORD=
+
+# GitHub OAuth (optional)
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
 ```
 
 ### 3. Build Frontend Assets
@@ -272,7 +345,7 @@ npm run dev              # watch mode during development
 ```bash
 python manage.py migrate
 python manage.py vendor_pull
-python manage.py sync_subs
+python manage.py sync_permissions
 python manage.py createsuperuser
 ```
 
@@ -296,24 +369,30 @@ docker build -t saas-django .
 docker run -p 8000:8000 \
   -e DJANGO_SECRET_KEY='your-secret-key' \
   -e STRIPE_SECRET_KEY='sk_test_...' \
+  -e DATABASE_URL='postgres://...' \
   saas-django
 ```
 
+The Dockerfile handles `vendor_pull` and `collectstatic` at build time. At runtime, migrations are applied automatically before Gunicorn starts.
+
 ---
 
-## API Routes
+## Routes
 
 | Route | Access | Description |
 |-------|--------|-------------|
-| `/` | Public / Auth | Landing page (anonymous) or Dashboard (authenticated) |
-| `/pricing/` | Public | Subscription plans with monthly/yearly toggle |
+| `/` | Public / Auth | Landing page (anonymous) or Dashboard redirect (authenticated) |
 | `/about/` | Public | About page |
-| `/profiles/` | Public | Active user directory |
-| `/profiles/<username>/` | Public | User profile detail |
-| `/accounts/` | Public | Auth pages (login, signup, password reset) |
-| `/checkout/<price_id>/` | Auth | Initiates Stripe Checkout for a plan |
-| `/checkout/start/` | Auth | Redirects to Stripe-hosted checkout |
-| `/checkout/success/` | Auth | Post-payment subscription provisioning |
+| `/pricing/` | Public | Subscription plans with monthly/yearly toggle |
+| `/pricing/<interval>/` | Public | Interval-specific pricing view (monthly or yearly) |
+| `/checkout/sub-price/<price_id>/` | Auth | Redirects to Stripe Checkout for a specific plan price |
+| `/checkout/start/` | Auth | Creates Stripe Checkout Session and redirects to Stripe |
+| `/checkout/success/` | Auth | Post-payment subscription provisioning callback |
+| `/accounts/` | Public | Auth pages — login, signup, email verification, password reset (allauth) |
+| `/accounts/billing/` | Auth | User subscription detail and management |
+| `/accounts/billing/cancel/` | Auth | Subscription cancellation |
+| `/profiles/` | Auth | Active user directory |
+| `/profiles/<username>/` | Auth | User profile detail |
 | `/protected/` | Auth | Password-protected page |
 | `/protected/user_only/` | Auth | Login-required page |
 | `/protected/staff_only/` | Staff | Staff-only page |
