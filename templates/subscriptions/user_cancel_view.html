@@ -1,21 +1,63 @@
 {% extends "base.html" %}
 
-{% block head_title %}Your Subscription - {{ block.super }}{% endblock head_title %}
+{% block head_title %}Cancel Subscription - {{ block.super }}{% endblock head_title %}
 
- {% block content %}
+{% block content %}
+<div style="min-height: 100vh; background: #111827; padding: 2.5rem 1rem;">
+<div style="max-width: 480px; margin: 0 auto;">
 
- {% if subscription.is_active_status %}
-<h1 class="text-lg font-medium">Are you sure you want to cancel {{ subscription.plan_name }}?</h1>
+  {% if subscription.is_active_status %}
 
-<form action="" method="POST">{% csrf_token %}
-    <button type="submit">Yes, cancel</button>
-</form>
-<a href="{{ subscription.get_absolute_url }}">No, go back</a>
+    <div style="background: #1f2937; border-radius: 0.75rem; border: 1px solid #374151; padding: 2rem;">
 
-{% else %}
+      <div style="width: 48px; height: 48px; border-radius: 50%; background: #450a0a;
+                  display: flex; align-items: center; justify-content: center; margin-bottom: 1.25rem;">
+        <svg style="width: 24px; height: 24px; color: #f87171;" fill="none" stroke="#f87171" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        </svg>
+      </div>
 
-<h1 class="text-lg font-medium">Your membership is no longer active</h1>
+      <h1 style="font-size: 1.25rem; font-weight: 700; color: white; margin: 0 0 0.5rem;">
+        Cancel {{ subscription.plan_name }}?
+      </h1>
+      <p style="font-size: 0.925rem; color: #9ca3af; margin: 0 0 1.75rem; line-height: 1.6;">
+        You'll keep access until the end of your current billing period. This action cannot be undone.
+      </p>
 
-{% endif %}
+      <div style="display: flex; gap: 0.75rem;">
+        <form action="" method="POST" style="margin: 0;">
+          {% csrf_token %}
+          <button type="submit"
+            style="padding: 0.625rem 1.25rem; font-size: 0.875rem; font-weight: 600;
+                   border-radius: 0.5rem; background: #dc2626; color: white;
+                   border: 1px solid #dc2626; cursor: pointer;">
+            Yes, cancel
+          </button>
+        </form>
+        <a href="{{ subscription.get_absolute_url }}"
+           style="padding: 0.625rem 1.25rem; font-size: 0.875rem; font-weight: 600;
+                  border-radius: 0.5rem; background: #374151; color: white;
+                  border: 1px solid #4b5563; text-decoration: none; display: inline-block;">
+          No, go back
+        </a>
+      </div>
 
+    </div>
+
+  {% else %}
+
+    <div style="background: #1f2937; border-radius: 0.75rem; border: 1px solid #374151; padding: 2rem; text-align: center;">
+      <h1 style="font-size: 1.25rem; font-weight: 700; color: white; margin: 0 0 0.5rem;">
+        Membership no longer active
+      </h1>
+      <p style="font-size: 0.925rem; color: #9ca3af; margin: 0;">
+        Your subscription has already been cancelled.
+      </p>
+    </div>
+
+  {% endif %}
+
+</div>
+</div>
 {% endblock content %}

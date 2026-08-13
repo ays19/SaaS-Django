@@ -1,19 +1,77 @@
 {% extends "base.html" %}
 
-{% block head_title %}Users - {{ block.super }}{% endblock head_title %}
+{% block head_title %}{{ instance.username }} - {{ block.super }}{% endblock head_title %}
 
 {% block content %}
-<h1 class="text-lg font-medium">{{ instance.username }}</h1>
+<div style="min-height: 100vh; background: #111827; padding: 2.5rem 1rem;">
+<div style="max-width: 768px; margin: 0 auto;">
 
-
-    {% if perms.auth or owner %}
-    {% if perms.auth.view_user or owner %}
+  <div style="display: flex; align-items: center; gap: 1.75rem; margin-bottom: 2rem;">
+    <div style="width: 56px; height: 56px; border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            color: white; display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; font-weight: 700; flex-shrink: 0;
+            box-shadow: 0 0 0 3px #374151;">
+  {{ instance.username|slice:":1"|upper }}
+    </div>
     <div>
-        {{ instance.first_name }} - {{ instance.last_name }} {{ instance.last_login }}
-    {% else %}
-    <div>You are not allowed to see this</div>
-    
-    {% endif %}
-{% endif %}
+      <h1 style="font-size: 1.875rem; font-weight: 700; color: white; margin: 0;">
+        {{ instance.username }}
+      </h1>
+      {% if instance.first_name or instance.last_name %}
+      <p style="color: #9ca3af; font-size: 1rem; margin: 0.25rem 0 0;">
+        {{ instance.first_name }} {{ instance.last_name }}
+      </p>
+      {% endif %}
+    </div>
+  </div>
 
+  {% if perms.auth.view_user or owner %}
+    <div style="background: #1f2937; border-radius: 0.75rem; border: 1px solid #374151; overflow: hidden;">
+
+      <div style="padding: 1.25rem 2.5rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #374151;">
+        <span style="font-size: 1rem; font-weight: 700; color: #9ca3af;">First Name</span>
+        <span style="font-size: 1rem; font-weight: 500; color: white;">{{ instance.first_name|default:"—" }}</span>
+      </div>
+      <div style="padding: 1.25rem 2.5rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #374151;">
+        <span style="font-size: 1rem; font-weight: 700; color: #9ca3af;">Last Name</span>
+        <span style="font-size: 1rem; font-weight: 500; color: white;">{{ instance.last_name|default:"—" }}</span>
+      </div>
+      {% if owner %}
+      <div style="padding: 1.25rem 2.5rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #374151;">
+        <span style="font-size: 1rem; font-weight: 700; color: #9ca3af;">Email</span>
+        <span style="font-size: 1rem; font-weight: 500; color: white;">{{ instance.email|default:"—" }}</span>
+      </div>
+      {% endif %}
+      <div style="padding: 1.25rem 2.5rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #374151;">
+        <span style="font-size: 1rem; font-weight: 700; color: #9ca3af;">Member Since</span>
+        <span style="font-size: 1rem; font-weight: 500; color: white;">{{ instance.date_joined|date:"M j, Y" }}</span>
+      </div>
+      <div style="padding: 1.25rem 2.5rem; display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-size: 1rem; font-weight: 700; color: #9ca3af;">Last Login</span>
+        <span style="font-size: 1rem; font-weight: 500; color: white;">{{ instance.last_login|date:"M j, Y \a\t g:i A"|default:"—" }}</span>
+      </div>
+
+    </div>
+
+    {% if owner %}
+    <div style="margin-top: 1.25rem;">
+      <a href="{% url 'user_subscription' %}"
+         style="display: inline-flex; align-items: center; gap: 0.5rem;
+                padding: 0.75rem 1.25rem; font-size: 1rem; font-weight: 500;
+                border-radius: 0.5rem; background: #374151; color: white;
+                border: 1px solid #4b5563; text-decoration: none;">
+        View Billing &amp; Subscription
+      </a>
+    </div>
+    {% endif %}
+
+  {% else %}
+    <div style="padding: 1.25rem; background: #1f2937; border: 1px solid #374151; border-radius: 0.75rem; font-size: 1rem; color: #9ca3af;">
+      You are not allowed to see this profile's details.
+    </div>
+  {% endif %}
+
+</div>
+</div>
 {% endblock content %}
